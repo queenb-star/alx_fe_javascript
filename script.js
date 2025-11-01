@@ -1,4 +1,3 @@
-// ------------------- DYNAMIC QUOTE GENERATOR -------------------
 let quotes = [];
 const quoteText = document.getElementById("quoteText");
 const quoteCategory = document.getElementById("quoteCategory");
@@ -84,15 +83,25 @@ function importFromJsonFile(event) {
   reader.readAsText(event.target.files[0]);
 }
 
-// ------------------- SERVER SYNC -------------------
-// Fetch quotes from mock server
-async function fetchQuotesFromServer() {
-  const response = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
-  const data = await response.json();
-  return data.map(post => ({ text: post.title, category: "ServerSync" }));
+// ------------------- SERVER INTERACTION -------------------
+function fetchQuotesFromServer() {
+  return fetch("https://jsonplaceholder.typicode.com/posts?_limit=5")
+    .then(res => res.json())
+    .then(data => data.map(post => ({ text: post.title, category: "ServerSync" })))
+    .catch(err => { console.error("Error fetching from server:", err); return []; });
 }
 
-// Merge local and server quotes
+function postQuotesToServer(newQuotes) {
+  return fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    body: JSON.stringify(newQuotes),
+    headers: { "Content-type": "application/json; charset=UTF-8" }
+  })
+  .then(res => res.json())
+  .then(data => console.log("Posted to server:", data))
+  .catch(err => console.error("Error posting to server:", err));
+}
+
 async function syncQuotes() {
   const serverQuotes = await fetchQuotesFromServer();
   const localTexts = new Set(quotes.map(q => q.text));
