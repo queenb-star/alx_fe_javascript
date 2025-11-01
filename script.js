@@ -28,7 +28,7 @@ function saveQuotes() {
 function displayRandomQuote() {
   var filtered = getFilteredQuotes();
   if (filtered.length === 0) {
-    quoteText.textContent = "No quotes found for this category.";
+    quoteText.textContent = "No quotes for this category.";
     quoteCategory.textContent = "";
     return;
   }
@@ -69,25 +69,14 @@ function populateCategories() {
     categoryFilter.appendChild(option);
   }
   var last = localStorage.getItem("lastCategory");
-  if (last) {
-    categoryFilter.value = last;
-  }
+  if (last) categoryFilter.value = last;
 }
 
 function getFilteredQuotes() {
   var selected = categoryFilter.value;
   localStorage.setItem("lastCategory", selected);
-  if (selected === "all") {
-    return quotes;
-  } else {
-    var result = [];
-    for (var i = 0; i < quotes.length; i++) {
-      if (quotes[i].category === selected) {
-        result.push(quotes[i]);
-      }
-    }
-    return result;
-  }
+  if (selected === "all") return quotes;
+  return quotes.filter(q => q.category === selected);
 }
 
 function filterQuotes() {
@@ -107,9 +96,7 @@ function importFromJsonFile(event) {
   var reader = new FileReader();
   reader.onload = function(e) {
     var imported = JSON.parse(e.target.result);
-    for (var i = 0; i < imported.length; i++) {
-      quotes.push(imported[i]);
-    }
+    for (var i = 0; i < imported.length; i++) quotes.push(imported[i]);
     saveQuotes();
     populateCategories();
     alert("Quotes imported successfully!");
@@ -118,60 +105,60 @@ function importFromJsonFile(event) {
 }
 
 // ---------------- SERVER INTERACTION ----------------
-function fetchQuotesFromServer() {
-  return fetch("https://jsonplaceholder.typicode.com/posts?_limit=5")
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      var serverQuotes = [];
-      for (var i = 0; i < data.length; i++) {
-        serverQuotes.push({ text: data[i].title, category: "ServerSync" });
-      }
-      return serverQuotes;
-    })
-    .catch(function(err) {
-      console.error("Error fetching from server:", err);
-      return [];
-    });
+async function fetchQuotesFromServer() {
+  try {
+    const res = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+    const data = await res.json();
+    const serverQuotes = [];
+    for (let i = 0; i < data.length; i++) {
+      serverQuotes.push({ text: data[i].title, category: "ServerSync" });
+    }
+    return serverQuotes;
+  } catch (err) {
+    console.error("Error fetching from server:", err);
+    return [];
+  }
 }
 
-function postQuotesToServer(localQuotes) {
-  return fetch("https://jsonplaceholder.typicode.com/posts", {
-    method: "POST",
-    body: JSON.stringify(localQuotes),
-    headers: { "Content-type": "application/json; charset=UTF-8" }
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) { console.log("Posted to server:", data); })
-  .catch(function(err) { console.error("Error posting to server:", err); });
+async function postQuotesToServer(localQuotes) {
+  try {
+    const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      body: JSON.stringify(localQuotes),
+      headers: { "Content-Type": "application/json; charset=UTF-8" }
+    });
+    const data = await res.json();
+    console.log("Posted to server:", data);
+  } catch (err) {
+    console.error("Error posting to server:", err);
+  }
 }
 
 // ---------------- SYNC & CONFLICT RESOLUTION ----------------
-function syncQuotes() {
-  fetchQuotesFromServer().then(function(serverQuotes) {
-    var localTexts = [];
-    for (var i = 0; i < quotes.length; i++) {
-      localTexts.push(quotes[i].text);
-    }
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  const localTexts = quotes.map(q => q.text);
 
-    for (var j = 0; j < serverQuotes.length; j++) {
-      var index = localTexts.indexOf(serverQuotes[j].text);
-      if (index >= 0) {
-        quotes[index] = serverQuotes[j]; // overwrite local with server
-      } else {
-        quotes.push(serverQuotes[j]);
-      }
+  for (let i = 0; i < serverQuotes.length; i++) {
+    const index = localTexts.indexOf(serverQuotes[i].text);
+    if (index >= 0) {
+      quotes[index] = serverQuotes[i]; // server overwrites local
+    } else {
+      quotes.push(serverQuotes[i]);
     }
-    saveQuotes();
-    showNotification(serverQuotes.length + " quotes synced from server.");
-    displayRandomQuote();
-  });
+  }
+
+  saveQuotes();
+  showNotification(serverQuotes.length + " quotes synced from server.");
+  displayRandomQuote();
 }
 
 // ---------------- UI NOTIFICATIONS ----------------
 function showNotification(msg) {
+  if (!notification) return;
   notification.textContent = msg;
   notification.style.display = "block";
-  setTimeout(function() {
+  setTimeout(() => {
     notification.style.display = "none";
   }, 4000);
 }
