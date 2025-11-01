@@ -1,17 +1,21 @@
 // ---------------- VARIABLES ----------------
-let quotes = [];
-const quoteText = document.getElementById("quoteText");
-const quoteCategory = document.getElementById("quoteCategory");
-const categoryFilter = document.getElementById("categoryFilter");
-const notification = document.getElementById("notification");
+var quotes = [];
+var quoteText = document.getElementById("quoteText");
+var quoteCategory = document.getElementById("quoteCategory");
+var categoryFilter = document.getElementById("categoryFilter");
+var notification = document.getElementById("notification");
 
 // ---------------- LOCAL STORAGE ----------------
 function loadQuotes() {
-  const stored = localStorage.getItem("quotes");
-  quotes = stored ? JSON.parse(stored) : [
-    { text: "The best way to predict the future is to create it.", category: "Motivation" },
-    { text: "Dream big and dare to fail.", category: "Inspiration" }
-  ];
+  var stored = localStorage.getItem("quotes");
+  if (stored) {
+    quotes = JSON.parse(stored);
+  } else {
+    quotes = [
+      { text: "The best way to predict the future is to create it.", category: "Motivation" },
+      { text: "Dream big and dare to fail.", category: "Inspiration" }
+    ];
+  }
   populateCategories();
   displayRandomQuote();
 }
@@ -20,27 +24,29 @@ function saveQuotes() {
   localStorage.setItem("quotes", JSON.stringify(quotes));
 }
 
-// ---------------- DISPLAY ----------------
+// ---------------- DISPLAY QUOTES ----------------
 function displayRandomQuote() {
-  const filtered = getFilteredQuotes();
+  var filtered = getFilteredQuotes();
   if (filtered.length === 0) {
     quoteText.textContent = "No quotes found for this category.";
     quoteCategory.textContent = "";
     return;
   }
-  const random = filtered[Math.floor(Math.random() * filtered.length)];
+  var random = filtered[Math.floor(Math.random() * filtered.length)];
   quoteText.textContent = random.text;
-  quoteCategory.textContent = `— ${random.category}`;
+  quoteCategory.textContent = "— " + random.category;
   sessionStorage.setItem("lastQuote", JSON.stringify(random));
 }
 
-// ---------------- ADD QUOTES ----------------
+// ---------------- ADD NEW QUOTE ----------------
 function addQuote() {
-  const text = document.getElementById("newQuoteText").value.trim();
-  const category = document.getElementById("newQuoteCategory").value.trim();
-  if (!text || !category) return alert("Please enter both quote and category.");
-
-  quotes.push({ text, category });
+  var text = document.getElementById("newQuoteText").value.trim();
+  var category = document.getElementById("newQuoteCategory").value.trim();
+  if (!text || !category) {
+    alert("Please enter both quote and category.");
+    return;
+  }
+  quotes.push({ text: text, category: category });
   saveQuotes();
   populateCategories();
   alert("Quote added!");
@@ -48,16 +54,40 @@ function addQuote() {
 
 // ---------------- CATEGORY FILTER ----------------
 function populateCategories() {
-  const categories = ["all", ...new Set(quotes.map(q => q.category))];
-  categoryFilter.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join("");
-  const last = localStorage.getItem("lastCategory");
-  if (last) categoryFilter.value = last;
+  var uniqueCategories = [];
+  for (var i = 0; i < quotes.length; i++) {
+    if (uniqueCategories.indexOf(quotes[i].category) === -1) {
+      uniqueCategories.push(quotes[i].category);
+    }
+  }
+  uniqueCategories.unshift("all");
+  categoryFilter.innerHTML = "";
+  for (var j = 0; j < uniqueCategories.length; j++) {
+    var option = document.createElement("option");
+    option.value = uniqueCategories[j];
+    option.textContent = uniqueCategories[j];
+    categoryFilter.appendChild(option);
+  }
+  var last = localStorage.getItem("lastCategory");
+  if (last) {
+    categoryFilter.value = last;
+  }
 }
 
 function getFilteredQuotes() {
-  const selected = categoryFilter.value;
+  var selected = categoryFilter.value;
   localStorage.setItem("lastCategory", selected);
-  return selected === "all" ? quotes : quotes.filter(q => q.category === selected);
+  if (selected === "all") {
+    return quotes;
+  } else {
+    var result = [];
+    for (var i = 0; i < quotes.length; i++) {
+      if (quotes[i].category === selected) {
+        result.push(quotes[i]);
+      }
+    }
+    return result;
+  }
 }
 
 function filterQuotes() {
@@ -66,18 +96,20 @@ function filterQuotes() {
 
 // ---------------- JSON IMPORT/EXPORT ----------------
 function exportQuotes() {
-  const blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
-  const link = document.createElement("a");
+  var blob = new Blob([JSON.stringify(quotes, null, 2)], { type: "application/json" });
+  var link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = "quotes.json";
   link.click();
 }
 
 function importFromJsonFile(event) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const imported = JSON.parse(e.target.result);
-    quotes.push(...imported);
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var imported = JSON.parse(e.target.result);
+    for (var i = 0; i < imported.length; i++) {
+      quotes.push(imported[i]);
+    }
     saveQuotes();
     populateCategories();
     alert("Quotes imported successfully!");
@@ -88,9 +120,18 @@ function importFromJsonFile(event) {
 // ---------------- SERVER INTERACTION ----------------
 function fetchQuotesFromServer() {
   return fetch("https://jsonplaceholder.typicode.com/posts?_limit=5")
-    .then(res => res.json())
-    .then(data => data.map(post => ({ text: post.title, category: "ServerSync" })))
-    .catch(err => { console.error(err); return []; });
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var serverQuotes = [];
+      for (var i = 0; i < data.length; i++) {
+        serverQuotes.push({ text: data[i].title, category: "ServerSync" });
+      }
+      return serverQuotes;
+    })
+    .catch(function(err) {
+      console.error("Error fetching from server:", err);
+      return [];
+    });
 }
 
 function postQuotesToServer(localQuotes) {
@@ -99,33 +140,40 @@ function postQuotesToServer(localQuotes) {
     body: JSON.stringify(localQuotes),
     headers: { "Content-type": "application/json; charset=UTF-8" }
   })
-  .then(res => res.json())
-  .then(data => console.log("Posted to server:", data))
-  .catch(err => console.error(err));
+  .then(function(res) { return res.json(); })
+  .then(function(data) { console.log("Posted to server:", data); })
+  .catch(function(err) { console.error("Error posting to server:", err); });
 }
 
 // ---------------- SYNC & CONFLICT RESOLUTION ----------------
-async function syncQuotes() {
-  const serverQuotes = await fetchQuotesFromServer();
-  const localTexts = new Set(quotes.map(q => q.text));
+function syncQuotes() {
+  fetchQuotesFromServer().then(function(serverQuotes) {
+    var localTexts = [];
+    for (var i = 0; i < quotes.length; i++) {
+      localTexts.push(quotes[i].text);
+    }
 
-  // Server takes precedence
-  serverQuotes.forEach(sq => {
-    const index = quotes.findIndex(q => q.text === sq.text);
-    if (index >= 0) quotes[index] = sq;
-    else quotes.push(sq);
+    for (var j = 0; j < serverQuotes.length; j++) {
+      var index = localTexts.indexOf(serverQuotes[j].text);
+      if (index >= 0) {
+        quotes[index] = serverQuotes[j]; // overwrite local with server
+      } else {
+        quotes.push(serverQuotes[j]);
+      }
+    }
+    saveQuotes();
+    showNotification(serverQuotes.length + " quotes synced from server.");
+    displayRandomQuote();
   });
-
-  saveQuotes();
-  showNotification(`${serverQuotes.length} quotes synced from server.`);
-  displayRandomQuote();
 }
 
 // ---------------- UI NOTIFICATIONS ----------------
 function showNotification(msg) {
   notification.textContent = msg;
   notification.style.display = "block";
-  setTimeout(() => notification.style.display = "none", 4000);
+  setTimeout(function() {
+    notification.style.display = "none";
+  }, 4000);
 }
 
 // ---------------- INITIALIZE ----------------
