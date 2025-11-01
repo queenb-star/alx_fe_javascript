@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quote Generator</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        #notification { display: none; background: #ffd; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; }
-        #quoteDisplay { margin: 20px 0; font-size: 1.2em; }
-        #quoteCategory { font-weight: bold; }
-        input, select, button { margin: 5px 0; padding: 5px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Quote Generator</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+#notification { display:none; background:#ffd; padding:10px; margin-bottom:10px; border:1px solid #ccc; }
+#quoteDisplay { margin:20px 0; font-size:1.2em; }
+#quoteCategory { font-weight:bold; }
+input, select, button { margin:5px 0; padding:5px; }
+</style>
 </head>
 <body>
 
@@ -19,28 +19,25 @@
 <div id="notification"></div>
 
 <div id="quoteDisplay">
-    <p id="quoteText"></p>
-    <p id="quoteCategory"></p>
+<p id="quoteText"></p>
+<p id="quoteCategory"></p>
 </div>
 
 <button id="newQuoteBtn">Show New Quote</button>
 
 <hr>
-
 <h3>Add New Quote</h3>
-<input id="newQuoteText" type="text" placeholder="Enter a new quote" />
-<input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
+<input id="newQuoteText" type="text" placeholder="Enter a new quote">
+<input id="newQuoteCategory" type="text" placeholder="Enter quote category">
 <button onclick="addQuote()">Add Quote</button>
 
 <hr>
-
 <h3>Filter Quotes</h3>
 <select id="categoryFilter" onchange="filterQuotes()"></select>
 
 <hr>
-
 <h3>Import / Export Quotes</h3>
-<input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
+<input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)">
 <button onclick="exportQuotes()">Export Quotes</button>
 
 <script src="script.js"></script>

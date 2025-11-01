@@ -45,10 +45,7 @@ function displayRandomQuote() {
 function addQuote() {
     var text = document.getElementById("newQuoteText").value.trim();
     var category = document.getElementById("newQuoteCategory").value.trim();
-    if (!text || !category) {
-        alert("Please enter both quote and category.");
-        return;
-    }
+    if (!text || !category) { alert("Please enter both quote and category."); return; }
     quotes.push({ text: text, category: category });
     saveQuotes();
     populateCategories();
@@ -59,9 +56,7 @@ function addQuote() {
 function populateCategories() {
     var uniqueCategories = [];
     for (var i = 0; i < quotes.length; i++) {
-        if (uniqueCategories.indexOf(quotes[i].category) === -1) {
-            uniqueCategories.push(quotes[i].category);
-        }
+        if (!uniqueCategories.includes(quotes[i].category)) uniqueCategories.push(quotes[i].category);
     }
     uniqueCategories.unshift("all");
     categoryFilter.innerHTML = "";
@@ -82,9 +77,7 @@ function getFilteredQuotes() {
     return quotes.filter(q => q.category === selected);
 }
 
-function filterQuotes() {
-    displayRandomQuote();
-}
+function filterQuotes() { displayRandomQuote(); }
 
 // ---------------- JSON IMPORT/EXPORT ----------------
 function exportQuotes() {
@@ -99,7 +92,7 @@ function importFromJsonFile(event) {
     var reader = new FileReader();
     reader.onload = function(e) {
         var imported = JSON.parse(e.target.result);
-        for (var i = 0; i < imported.length; i++) quotes.push(imported[i]);
+        quotes.push(...imported);
         saveQuotes();
         populateCategories();
         alert("Quotes imported successfully!");
@@ -109,45 +102,28 @@ function importFromJsonFile(event) {
 
 // ---------------- SERVER INTERACTION ----------------
 async function fetchQuotesFromServer() {
-    try {
-        const res = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
-        const data = await res.json();
-        const serverQuotes = data.map(item => ({ text: item.title, category: "ServerSync" }));
-        return serverQuotes;
-    } catch (err) {
-        console.error("Error fetching from server:", err);
-        return [];
-    }
+    const res = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+    const data = await res.json();
+    return data.map(item => ({ text: item.title, category: "ServerSync" }));
 }
 
 async function postQuotesToServer(localQuotes) {
-    try {
-        const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
-            method: "POST",
-            body: JSON.stringify(localQuotes),
-            headers: { "Content-Type": "application/json; charset=UTF-8" }
-        });
-        const result = await res.json();
-        console.log("Posted:", result);
-    } catch (err) {
-        console.error("Error posting to server:", err);
-    }
+    const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
+        method: "POST",
+        body: JSON.stringify(localQuotes),
+        headers: { "Content-Type": "application/json; charset=UTF-8" }
+    });
+    return await res.json();
 }
 
-// ---------------- SYNC & CONFLICT RESOLUTION ----------------
 async function syncQuotes() {
     const serverQuotes = await fetchQuotesFromServer();
     const localTexts = quotes.map(q => q.text);
-
-    for (let i = 0; i < serverQuotes.length; i++) {
-        const index = localTexts.indexOf(serverQuotes[i].text);
-        if (index >= 0) {
-            quotes[index] = serverQuotes[i]; // server overwrites local
-        } else {
-            quotes.push(serverQuotes[i]);
-        }
-    }
-
+    serverQuotes.forEach(sq => {
+        const index = localTexts.indexOf(sq.text);
+        if (index >= 0) quotes[index] = sq;
+        else quotes.push(sq);
+    });
     saveQuotes();
     showNotification(serverQuotes.length + " quotes synced from server.");
     displayRandomQuote();
@@ -158,9 +134,7 @@ function showNotification(msg) {
     if (!notification) return;
     notification.textContent = msg;
     notification.style.display = "block";
-    setTimeout(() => {
-        notification.style.display = "none";
-    }, 4000);
+    setTimeout(() => { notification.style.display = "none"; }, 4000);
 }
 
 // ---------------- INITIALIZE ----------------
