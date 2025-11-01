@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dynamic Quote Generator</title>
   <style>
-    /* Minimal styling for readability */
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; padding: 24px; max-width: 900px; margin: auto; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 24px; max-width: 900px; margin: auto; }
     header { display:flex; justify-content:space-between; align-items:center; gap:16px; }
     #quoteDisplay { margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 64px; font-size:1.125rem; }
     .controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -22,7 +21,7 @@
 <body>
   <header>
     <h1>Dynamic Quote Generator</h1>
-    <div class="small">Learn advanced DOM manipulation — add, edit, filter quotes</div>
+    <div class="small">Persist quotes with localStorage • Import / Export JSON</div>
   </header>
 
   <section class="controls" aria-label="Primary controls">
@@ -34,6 +33,13 @@
     <button id="newQuoteBtn">Show New Quote</button>
     <button id="showAddFormBtn">Add Quote</button>
     <button id="toggleListBtn">Show/Hide All Quotes</button>
+
+    <!-- Export & Import -->
+    <button id="exportBtn">Export Quotes (JSON)</button>
+    <label for="importFile" style="display:inline-flex; align-items:center; gap:8px;">
+      <input id="importFile" type="file" accept=".json" style="display:none" />
+      <button id="importBtn" type="button">Import Quotes (JSON)</button>
+    </label>
   </section>
 
   <div id="quoteDisplay" aria-live="polite">Press "Show New Quote" to begin.</div>
@@ -47,3 +53,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
